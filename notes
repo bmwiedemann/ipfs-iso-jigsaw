@@ -1,0 +1,59 @@
+because two 4GB isos that change nearly every day would double the
+daily data to store.
+I do have
+http://opensuse.zq1.de/distribution/leap/15.2/iso
+because it does not change and thus is rather low-volume.
+Would NET isos help the use-case you have in mind?
+
+For storing DVD isos:
+ipfs allows for custom chunking - one could make a chunker that would
+detect rpm headers and start a new 256KiB chunk there, so that chunk
+CIDs from rpm files could be re-used. But it would also need to get the
+length of the rpm right and create a padding chunk after it to fill the
+iso's 2KiB block.
+
+
+I checked 3 rpm headers:
+
+00000000  ed ab ee db 03 00 00 00  00 01 72 70 6d 2d 34 2e
+|..........rpm-4.|
+00000010  31 36 2e 30 2d 30 2e 30  00 00 00 00 00 00 00 00
+|16.0-0.0........|
+
+
+00000000  ed ab ee db 03 00 00 00  00 01 62 61 73 68 2d 35
+|..........bash-5|
+00000010  2e 31 2e 34 2d 30 2e 30  00 00 00 00 00 00 00 00
+|.1.4-0.0........|
+
+
+hexdump -C bash/RPMS/bash-5.1.4-0.0.src.rpm |head
+00000000  ed ab ee db 03 00 00 01  00 01 62 61 73 68 2d 35
+|..........bash-5|
+00000010  2e 31 2e 34 2d 30 2e 30  00 00 00 00 00 00 00 00
+|.1.4-0.0........|
+
+
+rpm -qp --qf "%{LONGSIGSIZE}\n" $RPM
+shows a value that is the compressed size minus
+4504 in the 3 samples above.
+
+https://github.com/ipfs/go-ipfs-chunker
+has the code of the 2 standard chunkers.
+
+
+
+Algorithm:
+  mount -o loop,ro ISO
+  calculate hash of first 2048 bytes of every file, associate with length+full sha256sum+CID - available via hash lookup
+  loop:
+    step through ISO file until a match with beginning of a file is found
+    find the longest full match of sha256
+      make a chunk for the file - re-using the CID and a 2nd chunk for padding to 2048
+  construct protobuf unixfs file entry out of CID+length chunks
+
+underlying assumtions:
+  All files start at start of a 2048 sector.
+  All files are contiguous
+  Most padding will be all 0 or all 1, so max 2047 CIDs can be re-used all the time.
+
