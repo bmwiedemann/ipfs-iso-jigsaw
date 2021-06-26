@@ -24,20 +24,13 @@ sub hashall($)
   open(my $fd, "<", $file) or die "error opening $file: $!";
   binmode $fd;
   $sha1->addfile($fd);
-  #my $data;
-  #while(read($fd, $data, 0x10000)) {
-  #  $sha1->add($data);
-  #}
   close($fd);
   return $sha1->hexdigest;
 }
-#die -s "/dev/shm/t1";
-#print hash2048("/dev/shm/t1"); die;
 
 if(-d "mnt/media.1") {umount()}
 mkdir("mnt");
 system("fuseiso", $isofile, "mnt")==0 or die "error in fuseiso: $!";
-#system("ls", "mnt");
 
 open(PIPE, "-|", "ipfs add -H --pin=false --cid-version 1 --raw-leaves -r mnt/") or die "ipfs add failed: $!";
 open(my $outfd, ">", "$isofile.hashes") or die $!;
