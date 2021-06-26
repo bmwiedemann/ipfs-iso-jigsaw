@@ -36,6 +36,7 @@ if not os.path.isdir('mnt'):
     os.mkdir("mnt")
 
 subprocess.run(["fuseiso", isofile, "mnt"])
+hashfile = open(isofile+".hashes", "w")
 with subprocess.Popen(["ipfs", "add", "-H", "--pin=false", "--cid-version", "1", "--raw-leaves", "-r", "mnt/"], stdout=subprocess.PIPE) as proc:
     while(1):
         line = proc.stdout.readline()
@@ -47,4 +48,4 @@ with subprocess.Popen(["ipfs", "add", "-H", "--pin=false", "--cid-version", "1",
         if not os.path.isfile(file):
             continue
         size = os.path.getsize(file)
-        print(cid, size, hash2048(file), hashall(file))
+        hashfile.write("%s %i %s %s\n" % (cid, size, hash2048(file), hashall(file)))
