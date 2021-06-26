@@ -1,7 +1,8 @@
 #!/usr/bin/perl -w
 # pre-hash files in an ISO
+# zypper in perl-Digest-SHA
 use strict;
-use Digest::SHA1  qw(sha1_hex);
+use Digest::SHA qw(sha256_hex);
 
 my $isofile=shift;
 die "usage: $0 ISO\n" unless $isofile;
@@ -16,16 +17,16 @@ sub hash2048($)
   read($fd, $data, 2048);
   close($fd);
   $data .= "\000" x (2048-length($data)); # pad to ISO sector size
-  return sha1_hex($data);
+  return sha256_hex($data);
 }
 sub hashall($)
 { my $file = shift;
-  my $sha1 = Digest::SHA1->new;
+  my $sha = Digest::SHA->new(256);
   open(my $fd, "<", $file) or die "error opening $file: $!";
   binmode $fd;
-  $sha1->addfile($fd);
+  $sha->addfile($fd);
   close($fd);
-  return $sha1->hexdigest;
+  return $sha->hexdigest;
 }
 
 if(-d "mnt/media.1") {umount()}

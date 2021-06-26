@@ -26,7 +26,7 @@ while True:
     data = isofd.read(2048)
     if len(data) == 0:
         break
-    m = hashlib.sha1(data)
+    m = hashlib.sha256(data)
     shahash = m.hexdigest()
     if shahash in hashdict:
         f = hashdict[shahash]
