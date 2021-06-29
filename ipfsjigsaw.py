@@ -76,23 +76,23 @@ while True:
                 m.update(mm[offs:offs+size])
                 if m.hexdigest() == candidate[2]:
                     fullmatches.append(candidate)
-            if len(fullmatches):
-                largestmatch = fullmatches[0]
-                for fullmatch in fullmatches[1:]:
-                    if fullmatch[1] > largestmatch[1]:
-                        largestmatch = fullmatch
-                size = largestmatch[1]
-                print(largestmatch)
-                add_chunk(largestmatch[0], size)
-                isofd.seek(offs+size, 0)
-                # add padding chunk
-                paddingbytes = (2048-size) % 2048
-                if paddingbytes > 0:
-                    data = isofd.read(paddingbytes)
-                    print("add padding chunk of %i bytes" % paddingbytes)
-                    add_block(data)
-                offs += size+paddingbytes-2048
-                found = 1
+        if len(fullmatches):
+            largestmatch = fullmatches[0]
+            for fullmatch in fullmatches[1:]:
+                if fullmatch[1] > largestmatch[1]:
+                    largestmatch = fullmatch
+            size = largestmatch[1]
+            print("largest match", largestmatch)
+            add_chunk(largestmatch[0], size)
+            isofd.seek(offs+size, 0)
+            # add padding chunk
+            paddingbytes = (2048-size) % 2048
+            if paddingbytes > 0:
+                data = isofd.read(paddingbytes)
+                print("add padding chunk of %i bytes" % paddingbytes)
+                add_block(data)
+            offs += size+paddingbytes-2048
+            found = 1
 
     if not found:
         print("no file found at offset %i" % offs)
