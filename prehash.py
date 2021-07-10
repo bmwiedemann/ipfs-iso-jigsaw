@@ -7,12 +7,14 @@ import sys
 
 try:
     isofile = sys.argv[1]
-except:
+except Exception:
     print("usage: %s ISO" % sys.argv[0])
     exit(1)
 
+
 def umount():
     subprocess.run(["fusermount", "-u", "mnt"])
+
 
 def hash2048(fname):
     data = ""
@@ -22,12 +24,14 @@ def hash2048(fname):
         data += b"\000"
     return hashlib.sha256(data).hexdigest()
 
+
 def hashall(fname):
     sha = hashlib.sha256()
     with open(fname, "rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
             sha.update(chunk)
     return sha.hexdigest()
+
 
 if os.path.isdir('mnt/media.1'):
     umount()
@@ -42,7 +46,7 @@ with subprocess.Popen(["ipfs", "add", "-H", "--pin=false", "--cid-version", "1",
         line = proc.stdout.readline()
         if not line:
             break
-        m = re.search("^added (\S+) (.*)$", line.decode())
+        m = re.search("^added (\\S+) (.*)$", line.decode())
         cid = m.group(1)
         file = m.group(2)
         if not os.path.isfile(file):
@@ -50,7 +54,7 @@ with subprocess.Popen(["ipfs", "add", "-H", "--pin=false", "--cid-version", "1",
         size = os.path.getsize(file)
         hashfile.write("%s %i %s %s\n" % (cid, size, hash2048(file), hashall(file)))
 hashfile.write(
-"bafkreifnp6wlewdpy3uwnqae27i5c2ycj5mal734wr6hvbo2xwfurcjmu4 4096 e5a00aa9991ac8a5ee3109844d84a55583bd20572ad3ffcd42792f3c36b183ad ad7facb2586fc6e966c004d7d1d16b024f5805ff7cb47c7a85dabd8b48892ca7 zero4k\n\
+    "bafkreifnp6wlewdpy3uwnqae27i5c2ycj5mal734wr6hvbo2xwfurcjmu4 4096 e5a00aa9991ac8a5ee3109844d84a55583bd20572ad3ffcd42792f3c36b183ad ad7facb2586fc6e966c004d7d1d16b024f5805ff7cb47c7a85dabd8b48892ca7 zero4k\n\
 bafkreie7dxf4gxbvbvqcp6ml4d24rnb3ilfffn3airm4brbl4ovirej5i4 8192 e5a00aa9991ac8a5ee3109844d84a55583bd20572ad3ffcd42792f3c36b183ad 9f1dcbc35c350d6027f98be0f5c8b43b42ca52b7604459c0c42be3aa88913d47 zero8k\n\
 bafkreicp462zv5w6hntfwz3yrtbptgesvobh56xdurttikz3wtr3zds37y 16384 e5a00aa9991ac8a5ee3109844d84a55583bd20572ad3ffcd42792f3c36b183ad 4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe zero16k\n\
 bafkreigdkaqeooxndndeftlsnswxe63d77zieswwrtw5p75xhr6l3ciepe 32768 e5a00aa9991ac8a5ee3109844d84a55583bd20572ad3ffcd42792f3c36b183ad c35020473aed1b4642cd726cad727b63fff2824ad68cedd7ffb73c7cbd890479 zero32k\n\

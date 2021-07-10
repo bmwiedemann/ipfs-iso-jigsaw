@@ -1,18 +1,18 @@
 #!/usr/bin/python3
 import hashlib
 import mmap
+import multibase
 import subprocess
 import sys
 import unixfs_pb2
-import multibase
 
 try:
     isofile = sys.argv[1]
-except:
+except Exception:
     print("usage: %s ISO" % sys.argv[0])
     exit(1)
 hashfd = open(isofile+".hashes", "r")
-hashdict = dict();
+hashdict = dict()
 while True:
     line = hashfd.readline()
     if not line:
@@ -31,6 +31,7 @@ dataparsed = unixfs_pb2.Data()
 dataparsed.Type = unixfs_pb2.Data.DataType.File
 dataparsed.filesize = 0
 
+
 def add_chunk(CID, size):
     link = unixfs_pb2.PBLink()
     link.Hash = multibase.decode(CID)
@@ -38,6 +39,7 @@ def add_chunk(CID, size):
     unixfsnode.Links.extend([link])
     dataparsed.filesize += size
     dataparsed.blocksizes.extend([size])
+
 
 def add_block(data):
     # store block
@@ -52,6 +54,7 @@ def add_block(data):
     add_chunk(CID, len(data))
     return 0
 
+
 while True:
     data = isofd.read(2048)
     if len(data) == 0:
@@ -62,13 +65,12 @@ while True:
     if shahash in hashdict:
         f = hashdict[shahash]
         size = f[0][1]
-        print("found file at offs %i with %i candidates, size=%i" % (offs, len(f), size)) # debug
+        print("found file at offs %i with %i candidates, size=%i" % (offs, len(f), size))  # debug
         fullmatches = list()
         for candidate in f:
             # find the longest match
-            #print(candidate) # debug
             size = candidate[1]
-            if size <= 2048: # small files are already verified
+            if size <= 2048:  # small files are already verified
                 fullmatches.append(candidate)
             else:
                 # for others we need to verify the full hash
@@ -106,9 +108,8 @@ unixfsnode.Data = dataparsed.SerializeToString()
 nodebytes = unixfsnode.SerializeToString()
 print("Got bytes="+str(len(nodebytes)))
 with open(isofile+".dag-pb", "wb") as f:
-        f.write(nodebytes)
-        f.close()
+    f.write(nodebytes)
+    f.close()
 putcmd = "ipfs dag put --pin --input-enc raw --format dag-pb".split(" ")
 putcmd.append(isofile+".dag-pb")
 subprocess.run(putcmd)
-
