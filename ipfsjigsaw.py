@@ -2,6 +2,7 @@
 import hashlib
 import mmap
 import multibase
+import os
 import subprocess
 import sys
 import unixfs_pb2
@@ -11,7 +12,11 @@ try:
 except Exception:
     print("usage: %s ISO" % sys.argv[0])
     exit(1)
-hashfd = open(isofile+".hashes", "r")
+isohashfile = isofile+".hashes"
+if not os.path.isfile(isohashfile):
+    file_path = os.path.realpath(__file__)
+    subprocess.run([os.path.dirname(file_path)+"/prehash.py", isofile])
+hashfd = open(isohashfile, "r")
 hashdict = dict()
 while True:
     line = hashfd.readline()
