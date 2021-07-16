@@ -41,7 +41,17 @@ if not os.path.isdir('mnt'):
 
 subprocess.run(["fuseiso", isofile, "mnt"])
 hashfile = open(isofile+".hashes", "w")
-with subprocess.Popen(["ipfs", "add", "-H", "--pin=false", "--cid-version", "1", "--raw-leaves", "--inline", "-r", "mnt/"], stdout=subprocess.PIPE) as proc:
+
+allfiles = list()
+for root, dirs, files in os.walk("mnt"):
+    if not files:
+        continue
+    dirs.sort()
+    files.sort()
+    allfiles = allfiles + list(map(lambda x: root+'/'+x, files))
+
+with subprocess.Popen(["ipfs", "add", "-H", "--pin=false", "--cid-version", "1", "--raw-leaves", "--inline"]+allfiles, stdout=subprocess.PIPE) as proc:
+    # FIXME: ipfs does not output any path and does not print identically named files https://github.com/ipfs/go-ipfs/issues/8264 so isfile and getsize below fail
     while(1):
         line = proc.stdout.readline()
         if not line:
@@ -49,8 +59,6 @@ with subprocess.Popen(["ipfs", "add", "-H", "--pin=false", "--cid-version", "1",
         m = re.search("^added (\\S+) (.*)$", line.decode())
         cid = m.group(1)
         file = m.group(2)
-        if not os.path.isfile(file):
-            continue
         size = os.path.getsize(file)
         hashfile.write("%s %i %s %s\n" % (cid, size, hash2048(file), hashall(file)))
 hashfile.write(
