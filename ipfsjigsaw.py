@@ -52,7 +52,7 @@ def add_block(data):
     with open(tmpfile, "wb") as f:
         f.write(data)
         f.close()
-    with subprocess.Popen(["ipfs", "add", "--pin=false", "--cid-version", "1", "--raw-leaves", "-Q", tmpfile], stdout=subprocess.PIPE) as proc:
+    with subprocess.Popen(["ipfs", "add", "--pin=false", "--cid-version", "1", "--raw-leaves", "--inline", "-Q", tmpfile], stdout=subprocess.PIPE) as proc:
         CID = proc.stdout.readline().decode()
     CID = CID[0:-1]
     print("Adding CID="+CID)
