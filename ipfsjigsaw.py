@@ -37,6 +37,10 @@ dataparsed.Type = unixfs_pb2.Data.DataType.File
 dataparsed.filesize = 0
 
 
+def debug(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
+
 def add_chunk(CID, size):
     link = unixfs_pb2.PBLink()
     link.Hash = multibase.decode(CID)
@@ -53,7 +57,7 @@ def add_block(data):
         proc.stdin.close()
         CID = proc.stdout.readline().decode()
     CID = CID[0:-1]
-    print("Adding CID="+CID)
+    debug("Adding CID="+CID)
     add_chunk(CID, len(data))
     return 0
 
@@ -68,7 +72,7 @@ while True:
     if shahash in hashdict:
         f = hashdict[shahash]
         size = f[0][1]
-        print("found file at offs %i with %i candidates, size=%i" % (offs, len(f), size))  # debug
+        debug("found file at offs %i with %i candidates, size=%i" % (offs, len(f), size))  # debug
         fullmatches = list()
         for candidate in f:
             # find the longest match
@@ -87,29 +91,29 @@ while True:
                 if fullmatch[1] > largestmatch[1]:
                     largestmatch = fullmatch
             size = largestmatch[1]
-            print("largest match", largestmatch)
+            debug("largest match", largestmatch)
             add_chunk(largestmatch[0], size)
             isofd.seek(offs+size, 0)
             # add padding chunk
             paddingbytes = (2048-size) % 2048
             if paddingbytes > 0:
                 data = isofd.read(paddingbytes)
-                print("add padding chunk of %i bytes" % paddingbytes)
+                debug("add padding chunk of %i bytes" % paddingbytes)
                 add_block(data)
             offs += size+paddingbytes-2048
             found = 1
 
     if not found:
-        print("no file found at offset %i" % offs)
+        debug("no file found at offset %i" % offs)
         # add non-file data chunk (can merge chunks later)
         add_block(data)
     offs += 2048
 
 
-print("finalizing...")
+debug("finalizing...")
 unixfsnode.Data = dataparsed.SerializeToString()
 nodebytes = unixfsnode.SerializeToString()
-print("Got bytes="+str(len(nodebytes)))
+debug("Got bytes="+str(len(nodebytes)))
 with open(isofile+".dag-pb", "wb") as f:
     f.write(nodebytes)
     f.close()
