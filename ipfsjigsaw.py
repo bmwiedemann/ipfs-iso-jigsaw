@@ -87,7 +87,7 @@ while True:
     data = isofd.read(2048)
     if len(data) == 0:
         break
-    found = 0
+    found = False
     m = hashlib.sha256(data)
     shahash = m.hexdigest()
     if shahash in hashdict:
@@ -123,7 +123,7 @@ while True:
                 debug("add padding chunk of %i bytes" % paddingbytes)
                 add_block_aggregate(data)
             offs += size+paddingbytes-2048
-            found = 1
+            found = True
 
     if not found:
         debug("no file found at offset %i" % offs)
