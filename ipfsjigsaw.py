@@ -37,6 +37,9 @@ dataparsed = unixfs_pb2.Data()
 dataparsed.Type = unixfs_pb2.Data.DataType.File
 dataparsed.filesize = 0
 aggregateddata = b""
+filesn = 0
+paddingn = 0
+nonfileblockn = 0
 
 
 def debug(*args, **kwargs):
@@ -122,13 +125,16 @@ while True:
                 data = isofd.read(paddingbytes)
                 debug("add padding chunk of %i bytes" % paddingbytes)
                 add_block_aggregate(data)
+                paddingn += 1
             offs += size+paddingbytes-2048
             found = True
+            filesn += 1
 
     if not found:
         debug("no file found at offset %i" % offs)
         # add non-file data chunk (can merge chunks later)
         add_block_aggregate(data)
+        nonfileblockn += 1
     offs += 2048
 
 
@@ -136,7 +142,7 @@ flush_aggregate()
 debug("finalizing...")
 unixfsnode.Data = dataparsed.SerializeToString()
 nodebytes = unixfsnode.SerializeToString()
-debug("Got bytes="+str(len(nodebytes)))
+debug("Got dag-pb bytes=%i files=%i padding=%i nonfile=%i" % (len(nodebytes), filesn, paddingn, nonfileblockn))
 with open(isofile+".dag-pb", "wb") as f:
     f.write(nodebytes)
     f.close()
