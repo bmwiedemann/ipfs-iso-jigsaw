@@ -3,6 +3,7 @@ import hashlib
 import mmap
 import multibase
 import os
+import re
 import subprocess
 import sys
 import unixfs_pb2
@@ -35,6 +36,7 @@ unixfsnode = unixfs_pb2.PBNode()
 dataparsed = unixfs_pb2.Data()
 dataparsed.Type = unixfs_pb2.Data.DataType.File
 dataparsed.filesize = 0
+aggregateddata = b""
 
 
 def debug(*args, **kwargs):
@@ -60,6 +62,25 @@ def add_block(data):
     debug("Adding CID="+CID)
     add_chunk(CID, len(data))
     return 0
+
+
+def flush_aggregate():
+    global aggregateddata
+    if not aggregateddata:
+        return
+    add_block(aggregateddata)
+    aggregateddata = b""
+
+
+def add_block_aggregate(data):
+    # check if we can/should aggregate
+    if not re.search(b"[^\000]", data):
+        flush_aggregate()
+        return add_block(data)
+    global aggregateddata
+    aggregateddata = aggregateddata + data
+    if len(aggregateddata) >= 4096:
+        flush_aggregate()
 
 
 while True:
@@ -92,6 +113,7 @@ while True:
                     largestmatch = fullmatch
             size = largestmatch[1]
             debug("largest match", largestmatch)
+            flush_aggregate()
             add_chunk(largestmatch[0], size)
             isofd.seek(offs+size, 0)
             # add padding chunk
@@ -99,17 +121,18 @@ while True:
             if paddingbytes > 0:
                 data = isofd.read(paddingbytes)
                 debug("add padding chunk of %i bytes" % paddingbytes)
-                add_block(data)
+                add_block_aggregate(data)
             offs += size+paddingbytes-2048
             found = 1
 
     if not found:
         debug("no file found at offset %i" % offs)
         # add non-file data chunk (can merge chunks later)
-        add_block(data)
+        add_block_aggregate(data)
     offs += 2048
 
 
+flush_aggregate()
 debug("finalizing...")
 unixfsnode.Data = dataparsed.SerializeToString()
 nodebytes = unixfsnode.SerializeToString()
