@@ -79,7 +79,7 @@ def add_block_aggregate(data):
         return add_block(data)
     global aggregateddata
     aggregateddata = aggregateddata + data
-    if len(aggregateddata) >= 4096:
+    if len(aggregateddata) >= 16384:
         flush_aggregate()
 
 
