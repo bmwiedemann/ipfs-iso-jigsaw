@@ -146,6 +146,6 @@ debug("Got dag-pb bytes=%i files=%i padding=%i nonfile=%i" % (len(nodebytes), fi
 with open(isofile+".dag-pb", "wb") as f:
     f.write(nodebytes)
     f.close()
-putcmd = "ipfs --upgrade-cidv0-in-output dag put --pin --input-enc raw --format dag-pb".split(" ")
+putcmd = "ipfs --upgrade-cidv0-in-output dag put --pin --input-codec dag-pb --store-codec dag-pb".split(" ")
 putcmd.append(isofile+".dag-pb")
 subprocess.run(putcmd)
