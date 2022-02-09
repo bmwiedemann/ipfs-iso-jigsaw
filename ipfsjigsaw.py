@@ -43,7 +43,16 @@ aggregateddata = b""
 filesn = 0
 paddingn = 0
 nonfileblockn = 0
-
+paddinghashes = {}
+with subprocess.Popen(["ipfs", "ls", "--size=false", "--resolve-type=false", "bafybeidobwhbiidzroyewbj6vzgudp7zen6x6cjm5xm4j3sp3zmvwzc5u4"], stdout=subprocess.PIPE) as proc:
+    while(1):
+        line = proc.stdout.readline()
+        if not line:
+            break
+        m = re.search("^(\\S+) +([0-9]+)$", line.decode())
+        cid = m.group(1)
+        file = m.group(2)
+        paddinghashes[int(file)] = cid
 
 def debug(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -82,7 +91,9 @@ def add_block_aggregate(data):
     # check if we can/should aggregate
     if len(data) < 2048 and not re.search(b"[^\000]", data):
         flush_aggregate()
-        return add_block(data)
+        CID = paddinghashes[len(data)]
+        add_chunk(CID, len(data))
+        return
     global aggregateddata
     aggregateddata = aggregateddata + data
     if len(aggregateddata) >= 16384:
