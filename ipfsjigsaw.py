@@ -80,7 +80,7 @@ def flush_aggregate():
 
 def add_block_aggregate(data):
     # check if we can/should aggregate
-    if not re.search(b"[^\000]", data):
+    if len(data) < 2048 and not re.search(b"[^\000]", data):
         flush_aggregate()
         return add_block(data)
     global aggregateddata
