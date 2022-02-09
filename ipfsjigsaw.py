@@ -28,6 +28,9 @@ while True:
         hashdict[a[2]] = list()
     hashdict[a[2]].append([a[0], int(a[1]), a[3]])
 hashfd.close()
+if len(hashdict) < 100:
+    print("too small hashdict - aborting - please check")
+    exit(1)
 isofd = open(isofile, "rb")
 mm = mmap.mmap(isofd.fileno(), 0, prot=mmap.PROT_READ)
 offs = 0
@@ -143,6 +146,9 @@ debug("finalizing...")
 unixfsnode.Data = dataparsed.SerializeToString()
 nodebytes = unixfsnode.SerializeToString()
 debug("Got dag-pb bytes=%i files=%i padding=%i nonfile=%i" % (len(nodebytes), filesn, paddingn, nonfileblockn))
+if len(nodebytes) >= 1024*1024:
+    print("The jigsaw DAG object is too large")
+    exit(1)
 with open(isofile+".dag-pb", "wb") as f:
     f.write(nodebytes)
     f.close()
