@@ -26,9 +26,11 @@ while True:
     a = line.strip().split(" ")
     if not a[2] in hashdict:
         hashdict[a[2]] = list()
+    if int(a[1]) <= 0:
+        continue
     hashdict[a[2]].append([a[0], int(a[1]), a[3]])
 hashfd.close()
-if len(hashdict) < 100:
+if len(hashdict) < 70:
     print("too small hashdict - aborting - please check")
     exit(1)
 isofd = open(isofile, "rb")
