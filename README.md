@@ -16,5 +16,5 @@ see [INSTALL.md](INSTALL.md)
 ```bash
 wget http://download.opensuse.org/distribution/leap/15.2/iso/openSUSE-Leap-15.2-NET-x86_64.iso
 ./ipfsjigsaw.py openSUSE-Leap-15.2-NET-x86_64.iso
-ipfs ls QmfKjz8VTPsBejKTkfLFWdRtjkFQvyFdFVrHi3vp4zVaLQ
+ipfs ls bafybeicgmnt4s5haaxyr3aay6xbtqqxh5smeq6po5u2myr3y2gqgyloetu
 ```
