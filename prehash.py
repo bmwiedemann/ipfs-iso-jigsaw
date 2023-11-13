@@ -41,7 +41,7 @@ if not os.path.isdir('mnt'):
 
 subprocess.run(["fuseiso", isofile, "mnt"])
 hashfile = open(isofile+".hashes", "w")
-with subprocess.Popen(["ipfs", "add", "-H", "--pin=false", "--cid-version", "1", "--raw-leaves", "--inline", "-r", "mnt/"], stdout=subprocess.PIPE) as proc:
+with subprocess.Popen(["ipfs", "add", "-H", "--pin=true", "--cid-version", "1", "--raw-leaves", "--inline", "-r", "mnt/"], stdout=subprocess.PIPE) as proc:
     while(1):
         line = proc.stdout.readline()
         if not line:
